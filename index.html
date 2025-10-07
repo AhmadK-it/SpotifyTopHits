@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spotify Top Hits</title>
+<style>
+  body { 
+    font-family: sans-serif; 
+    background: #111; 
+    color: #eee; 
+    padding: 2em;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  h1 { color: #1db954; }
+  .button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+    margin: 2em 0;
+  }
+  button { 
+    padding: 0.75em 1.5em; 
+    font-size: 1em; 
+    cursor: pointer; 
+    background: #1db954; 
+    border: none; 
+    color: white; 
+    border-radius: 24px;
+    transition: all 0.3s;
+    font-weight: 600;
+  }
+  button:hover { 
+    background: #1ed760;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(29, 185, 84, 0.4);
+  }
+  button:active {
+    transform: translateY(0);
+  }
+  .track { 
+    margin: 0.5em 0; 
+    padding: 1em; 
+    background: #222; 
+    border-radius: 8px;
+    border-left: 4px solid #1db954;
+    transition: background 0.2s;
+  }
+  .track:hover {
+    background: #2a2a2a;
+  }
+  a { 
+    color: #1db954; 
+    text-decoration: none; 
+  }
+  a:hover { 
+    text-decoration: underline; 
+  }
+  #output { 
+    margin-top: 2em; 
+  }
+  .error { 
+    color: #ff4444;
+    padding: 1em;
+    background: #331111;
+    border-radius: 8px;
+    border-left: 4px solid #ff4444;
+  }
+  .loading {
+    color: #1db954;
+    font-size: 1.2em;
+    padding: 2em;
+    text-align: center;
+  }
+  h2 {
+    color: #1db954;
+    font-size: 1.8em;
+    margin-bottom: 1em;
+  }
+  .track b {
+    color: #fff;
+    font-size: 1.1em;
+  }
+  .artist {
+    color: #b3b3b3;
+    margin: 0.3em 0;
+  }
+</style>
+</head>
+<body>
+  <h1>🎵 Spotify Top Hits</h1>
+  
+  <div class="button-group">
+    <button onclick="loadHits('arabic', 'top')">🇸🇾 Arabic Top 50</button>
+    <button onclick="loadHits('english', 'top')">🌍 English Top 50</button>
+    <button onclick="loadHits('arabic', 'new')">✨ New Arabic Hits</button>
+    <button onclick="loadHits('english', 'new')">🆕 New English Hits</button>
+  </div>
+  
+  <div id="output"></div>
+
+  <script>
+    async function loadHits(language, type) {
+      const output = document.getElementById("output");
+      output.innerHTML = '<div class="loading">Loading...</div>';
+      
+      try {
+        // Build URL with both parameters
+        const url = `https://black-boat-a932.ma714520.workers.dev/?lang=${language}&type=${type}`;
+        console.log('Fetching:', url); // Debug log
+        
+        const res = await fetch(url);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        console.log('Response data:', data); // Debug log
+
+        if (data.error) {
+          output.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+          return;
+        }
+
+        if (!data.tracks || data.tracks.length === 0) {
+          output.innerHTML = `<div class="error">No tracks found in playlist "${data.playlist || 'Unknown'}"</div>`;
+          return;
+        }
+
+        const html = `
+          <h2>${data.playlist}</h2>
+          <div>${data.tracks
+            .map((t, i) => `
+              <div class="track">
+                <b>${i + 1}. ${t.name}</b>
+                <div class="artist">${t.artist}</div>
+                <a href="${t.url}" target="_blank">🎵 ${t.album}</a>
+              </div>
+            `)
+            .join("")}
+          </div>`;
+        output.innerHTML = html;
+      } catch (error) {
+        output.innerHTML = `<div class="error">Error: ${error.message}<br><small>Check console for details</small></div>`;
+        console.error('Fetch error:', error);
+      }
+    }
+  </script>
+</body>
+</html>
